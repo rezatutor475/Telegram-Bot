@@ -13,7 +13,7 @@ import time
 
 
 # Replace <YourBOTToken> with your actual bot token
-bot = telebot.TeleBot("5689834821:AAGa72lil67V_mqrOJZSqHkr7qp6I3rTLNQ")
+bot = telebot.TeleBot("???????????)
 
 # Handler for '/start' command
 @bot.message_handler(commands=['start'])
