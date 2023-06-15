@@ -13,90 +13,121 @@ import time
 
 
 # Replace <YourBOTToken> with your actual bot token
-bot = telebot.TeleBot("???????????")
+bot = telebot.TeleBot("5689834821:AAGa72lil67V_mqrOJZSqHkr7qp6I3rTLNQ")
 
-# Handler for '/start' command
+
 @bot.message_handler(commands=['start'])
 def start(message):
-    chat_id = message.chat.id
-    bot.send_message(chat_id, "Hello! Your chat ID is: {}".format(chat_id))
+    bot.reply_to(message, 'Bot started!')
 
-# Handler for '/get_chat_id' command
-@bot.message_handler(commands=['get_chat_id'])
-def get_chat_id(message):
-    chat_id = message.chat.id
-    bot.send_message(chat_id, "Your chat ID is: {}".format(chat_id))
+@bot.message_handler(commands=['get_ids'])
+def get_ids(message):
+    chat_list = bot.get_chat_administrators(message.chat.id)
 
-# Handler for '/get_group_id' command
-@bot.message_handler(commands=['get_group_id'])
-def get_group_id(message):
+    response = "Group and Channel IDs:\n"
+    for chat in chat_list:
+        chat_id = chat.chat.id
+        chat_title = chat.chat.title
+        response += f"Title: {chat_title}\nID: {chat_id}\n\n"
+
+    bot.reply_to(message, response)
+
+@bot.message_handler(commands=['get_info'])
+def get_info(message):
     chat_id = message.chat.id
-    if message.chat.type == 'group':
-        bot.send_message(chat_id, "This is a group. Group ID is: {}".format(chat_id))
+
+    chat_info = bot.get_chat(chat_id)
+    response = f"Chat Info:\nID: {chat_info.id}\nTitle: {chat_info.title}\nType: {chat_info.type}\n"
+
+    bot.reply_to(message, response)
+
+@bot.message_handler(commands=['get_members'])
+def get_members(message):
+    chat_id = message.chat.id
+
+    members = bot.get_chat_members_count(chat_id)
+    response = f"Total Members: {members}"
+
+    bot.reply_to(message, response)
+
+@bot.message_handler(commands=['get_admins'])
+def get_admins(message):
+    chat_id = message.chat.id
+
+    admins = bot.get_chat_administrators(chat_id)
+    response = "Admins:\n"
+    for admin in admins:
+        admin_id = admin.user.id
+        admin_name = admin.user.first_name
+        response += f"Name: {admin_name}\nID: {admin_id}\n\n"
+
+    bot.reply_to(message, response)
+
+@bot.message_handler(commands=['get_username'])
+def get_username(message):
+    chat_id = message.chat.id
+    username = bot.get_chat(chat_id).username
+
+    if username:
+        response = f"Username: @{username}"
     else:
-        bot.send_message(chat_id, "This command can only be used in a group.")
+        response = "This chat does not have a username."
 
-# Handler for '/get_channel_id' command
-@bot.message_handler(commands=['get_channel_id'])
-def get_channel_id(message):
+    bot.reply_to(message, response)
+
+@bot.message_handler(commands=['get_group_members'])
+def get_group_members(message):
     chat_id = message.chat.id
-    if message.chat.type == 'channel':
-        bot.send_message(chat_id, "This is a channel. Channel ID is: {}".format(chat_id))
-    else:
-        bot.send_message(chat_id, "This command can only be used in a channel.")
 
-# Handler for '/send_message_to' command
-@bot.message_handler(commands=['send_message_to'])
-def send_message_to(message):
+    members = bot.get_chat_members_count(chat_id)
+    response = f"Group Members: {members}"
+
+    bot.reply_to(message, response)
+
+@bot.message_handler(commands=['get_channel_subscribers'])
+def get_channel_subscribers(message):
     chat_id = message.chat.id
-    if len(message.text.split()) > 1:
-        recipient_id = message.text.split()[1]
-        if recipient_id.isdigit():
-            recipient_id = int(recipient_id)
-            bot.send_message(recipient_id, "This message was sent to you by the bot.")
-            bot.send_message(chat_id, "Message sent successfully to chat ID: {}".format(recipient_id))
-        else:
-            bot.send_message(chat_id, "Invalid recipient ID. Please provide a valid numeric chat ID.")
-    else:
-        bot.send_message(chat_id, "Please provide a chat ID after the command to send a message.")
 
-# Handler for '/get_user_info' command
-@bot.message_handler(commands=['get_user_info'])
-def get_user_info(message):
+    subscribers = bot.get_chat_members_count(chat_id)
+    response = f"Channel Subscribers: {subscribers}"
+
+    bot.reply_to(message, response)
+
+@bot.message_handler(commands=['send_message'])
+def send_message_to_chat(message):
     chat_id = message.chat.id
-    if len(message.text.split()) > 1:
-        user_id = message.text.split()[1]
-        if user_id.isdigit():
-            user_id = int(user_id)
-            user = bot.get_chat(user_id)
-            bot.send_message(chat_id, "User Info:\n\nUsername: @{}\nFirst Name: {}\nLast Name: {}\nID: {}".format(
-                user.username or "N/A",
-                user.first_name or "N/A",
-                user.last_name or "N/A",
-                user.id
-            ))
-        else:
-            bot.send_message(chat_id, "Invalid user ID. Please provide a valid numeric user ID.")
-    else:
-        bot.send_message(chat_id, "Please provide a user ID after the command to get user info.")
+    text = message.text.split('/send_message ')[1]
 
-# Handler for '/get_bot_info' command
-@bot.message_handler(commands=['get_bot_info'])
-def get_bot_info(message):
-    chat_id = message.chat.id
-    bot_info = bot.get_me()
-    bot.send_message(chat_id, "Bot Info:\n\nUsername: @{}\nFirst Name: {}\nLast Name: {}\nID: {}".format(
-        bot_info.username or "N/A",
-        bot_info.first_name or "N/A",
-        bot_info.last_name or "N/A",
-        bot_info.id
-    ))
+    bot.send_message(chat_id, text)
+    bot.reply_to(message, "Message sent successfully!")
 
-# Handler for text messages
+@bot.message_handler(content_types=['new_chat_members'])
+def greet_new_member(message):
+    member_names = [user.first_name for user in message.new_chat_members]
+    response = f"Welcome, {' '.join(member_names)}! Feel free to introduce yourself."
+
+    bot.reply_to(message, response)
+
 @bot.message_handler(func=lambda message: True)
-def echo(message):
-    chat_id = message.chat.id
-    bot.send_message(chat_id, message.text)
+def echo_message(message):
+    bot.reply_to(message, message.text)
+
+@bot.inline_handler(lambda query: True)
+def inline_query_handler(query):
+    try:
+        query_text = query.query
+        response = f"You entered: {query_text}"
+
+        results = [telebot.types.InlineQueryResultArticle(
+            id='1',
+            title='Echo',
+            input_message_content=telebot.types.InputTextMessageContent(message_text=response)
+        )]
+
+        bot.answer_inline_query(query.id, results)
+    except Exception as e:
+        print(e)
+
 
 # Handler for '/photo' command
 @bot.message_handler(commands=['photo'])
@@ -152,29 +183,6 @@ def handle_inline_keyboard_callback(call):
     elif call.data == "button3":
         bot.send_message(chat_id, "You clicked Button 3")
 
-# Handler for '/weather' command
-@bot.message_handler(commands=['weather'])
-def get_weather(message):
-    chat_id = message.chat.id
-    # Your weather API integration code here
-    weather_data = get_weather_data()
-    bot.send_message(chat_id, "Today's weather: {}".format(weather_data))
-
-# Handler for '/news' command
-@bot.message_handler(commands=['news'])
-def get_news(message):
-    chat_id = message.chat.id
-    # Your news API integration code here
-    news_data = get_news_data()
-    bot.send_message(chat_id, "Latest news: {}".format(news_data))
-
-# Handler for '/quote' command
-@bot.message_handler(commands=['quote'])
-def get_quote(message):
-    chat_id = message.chat.id
-    # Your quote API integration code here
-    quote = get_quote_data()
-    bot.send_message(chat_id, "Here's a quote for you:\n{}".format(quote))
 
 # Handler for '/subscribe' command
 @bot.message_handler(commands=['subscribe'])
